@@ -46,6 +46,20 @@ export type QueryResultMap<_Data, _Input> = {
 	[reqID: string]: Writable<QueryResult<_Data, _Input> & { pageInfo?: PageInfo }>
 }
 
+export class QueryError extends Error {
+
+	#graphQLErrors: any[]
+
+	constructor(errors: any[]) {
+		super('Query returned errors')
+		this.#graphQLErrors = errors
+	}
+
+	get graphQLErrors() {
+		return this.#graphQLErrors
+	}
+}
+
 export function queryStore<_Data extends GraphQLObject, _Input>({
 	config,
 	artifact,
@@ -518,7 +532,7 @@ async function fetchAndCache<_Data extends GraphQLObject, _Input>({
 			}))
 
 			// don't go any further
-			throw result.errors
+			throw new QueryError(result.errors)
 		} else {
 			store.set({
 				data: (unmarshaled || {}) as _Data,
